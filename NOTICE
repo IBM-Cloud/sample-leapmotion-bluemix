@@ -1,0 +1,24 @@
+Sample to connect Leap Motion with Bluemix
+https://github.com/IBM-Bluemix/sample-leapmotion-bluemix
+© Copyright IBM Corp. 2016
+
+
+Eclipse Paho JavaScript Client
+https://www.eclipse.org/paho/clients/js/
+EPL: https://www.eclipse.org/org/documents/epl-v10.php
+
+LeapJS
+http://github.com/leapmotion/leapjs/  
+ALv2: https://github.com/leapmotion/leapjs/blob/master/LICENSE
+
+LeapJS-Plugins
+http://github.com/leapmotion/leapjs-plugins/
+ALv2: https://github.com/leapmotion/leapjs-plugins/blob/master/LICENSE
+
+LeapJS Rigged Hand
+https://github.com/leapmotion/leapjs-rigged-hand/
+ALv2: https://github.com/leapmotion/leapjs-rigged-hand/blob/master/LICENSE
+
+three.js
+https://github.com/mrdoob/three.js/
+MIT: https://github.com/mrdoob/three.js/blob/master/LICENSE

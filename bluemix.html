@@ -1,0 +1,170 @@
+<!--
+   Copyright 2016 IBM Corp. All Rights Reserved.
+ 
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+ 
+      http://www.apache.org/licenses/LICENSE-2.0
+ 
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<html>
+  <head>
+    <title>Controller to connect Leap Motion with Bluemix</title>
+    
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r67/three.js"></script>
+    <script src="http://js.leapmotion.com/leap-0.6.4.min.js"></script>
+    <script src="http://js.leapmotion.com/leap-plugins-0.1.6.1.js"></script>
+    <script src="http://js.leapmotion.com/leap.rigged-hand-0.1.4.min.js"></script>
+    <script src="mqttws31.js"></script>
+  </head>
+
+  <body>
+    <h2>Controller to connect Leap Motion with Bluemix</h2>
+    <p>
+      Sample showing how to send commands via MQTT to Bluemix when gestures are recognized via Leap Motion. 
+    </p>
+    <p>
+      Four gestures are supported and mapped to MQTT commands.
+      <ul>
+        <li>Swipe left - left</li>
+        <li>Swipe right - right</li>
+        <li>Tap screen - move</li>
+        <li>Circle counter clockwise - stop</li>
+      </ul>
+    </p>
+
+    <div style="color: darkblue; font-size: 24px; position: fixed; top: 300px;">
+      <div id="message"></div>
+    </div>
+  </body>
+
+  <script type="text/javascript">
+    var commandBeingExecuted = false;
+    var commandRecognized = false;
+    var command;
+  
+    var message = document.getElementById('message');
+    message.innerHTML = "Message: Ready for next gesture";
+
+    Leap.loop({ background: true, enableGestures: true }, function(frame) {
+      if (frame.gestures.length > 0) {
+        for (var i = 0; i < frame.gestures.length; i++) {
+          var gesture = frame.gestures[i];
+          if (gesture.type == "screenTap") {
+            command = "Move";
+            commandRecognized = true;
+          }
+          else if (gesture.type == "circle") {
+            if (gesture.state == "stop") {
+              commandRecognized = true;
+              command = "Stop";
+            }
+          }
+          else if (gesture.type == "swipe") {  
+            if (gesture.direction[0] > 0) {
+                command = "Right";
+                commandRecognized = true;
+            } 
+            else {
+                command = "Left";
+                commandRecognized = true;
+            }
+          }
+   
+          if (commandRecognized) {
+            commandRecognized = false;
+            if (commandBeingExecuted == false) {
+              commandBeingExecuted = true;
+              message.innerHTML = "Message: " + command;
+
+              publishMQTT(command);
+
+              setTimeout(function() {
+                message.innerHTML =  "Message: Ready for next gesture";
+                commandBeingExecuted = false;
+              }, 3000);
+            }
+          }
+        }
+      }
+    });
+
+    showHand = function (controller) {
+      controller.use('playback', {        
+        recording: 'playback.json',
+        timeBetweenLoops: 2000,
+        pauseOnHand: true
+        }).on('riggedHand.meshAdded', function(handMesh, leapHand) {
+          handMesh.material.opacity = 1;
+        });
+
+      var overlay = controller.plugins.playback.player.overlay;
+      overlay.style.right = 0;
+      overlay.style.left = 'auto';
+      overlay.style.top = 'auto';
+      overlay.style.padding = 0;
+      overlay.style.bottom = '13px';
+      overlay.style.width = '180px';
+
+      controller.use('riggedHand', {
+        scale: 1.5,
+        boneColors: function (boneMesh, leapHand) {
+          if ((boneMesh.name.indexOf('Finger_') == 0)) {
+            return {
+              hue: 0.564,
+              saturation: leapHand.grabStrength,
+              lightness: 0.5
+            }
+          }
+        }
+      });
+
+      var camera = controller.plugins.riggedHand.camera;
+      camera.position.set(0, 20, -25);
+      camera.lookAt(new THREE.Vector3(0, 3, 0));
+    };
+    showHand(Leap.loopController);
+
+
+    var mqttClient;
+    var mqttConfig = {
+      deviceId : "niklas", // enter your device id
+      deviceType : "leapmotion",
+      apiToken : "", // enter your authentication token
+      orgId : "", // enter your organization id
+      port : 1883
+    };
+
+    function publishMQTT(commandToBeSent) {
+      var mqttMessage;
+      if (mqttClient) {
+        mqttMessage = new Paho.MQTT.Message(JSON.stringify({
+          "event" : commandToBeSent
+        }));
+        mqttMessage.destinationName = "iot-2/evt/partial/fmt/json";
+        mqttClient.send(mqttMessage);  
+      }
+    }
+
+    function connectMQTT() {
+      var clientId = ['d', mqttConfig.orgId, mqttConfig.deviceType, mqttConfig.deviceId].join(':');
+      mqttClient = new Paho.MQTT.Client(mqttConfig.orgId + ".messaging.internetofthings.ibmcloud.com", mqttConfig.port, clientId);
+      mqttClient.connect({
+        userName: "use-token-auth",
+        password: mqttConfig.apiToken,
+        onSuccess: function() { 
+          debugger;
+          message.innerHTML =  "Message: Connected to Bluemix. Ready for next gesture";
+        }
+      });
+    }
+
+    connectMQTT();
+  </script>
+</html>
