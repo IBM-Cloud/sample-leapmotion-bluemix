@@ -11,6 +11,8 @@ The best way to explain the functionality are pictures. Check out the pictures i
 
 ![alt text](https://raw.githubusercontent.com/IBM-Bluemix/sample-leapmotion-bluemix/master/screenshots/swiperight.jpg "Node-RED flow")
 
+![alt text](https://raw.githubusercontent.com/IBM-Bluemix/sample-leapmotion-bluemix/master/screenshots/picture.jpg "Picture")
+
 The project has been implemented via the [Leap Motion JavaScript SDK](https://developer.leapmotion.com/documentation/javascript/index.html). MQTT messages are sent via [Paho](https://www.eclipse.org/paho/clients/js/) to [IBM Bluemix](https://bluemix.net/) and the [Internet of Things](https://console.ng.bluemix.net/catalog/internet-of-things/) foundation. 
 
 Via the Internet of Things foundation the commands can be sent to devices like the Anki Overdrive cars. The cars can be connected to the foundation via the separate project [Node.js Controller and MQTT API for Anki Overdrive](https://github.com/IBM-Bluemix/node-mqtt-for-anki-overdrive).
